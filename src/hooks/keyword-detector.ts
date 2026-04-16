@@ -1,0 +1,181 @@
+/**
+ * UserPromptSubmit hook — detects magic keywords and injects skill context.
+ */
+
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { readStdin, writeOutput, passThrough, getArceusDir, getPluginRoot } from "./utils.js";
+import type { UserPromptSubmitInput } from "./types.js";
+import { logEvent } from "../state/index.js";
+
+// --- Keyword definitions ---
+
+interface KeywordDef {
+  patterns: RegExp;
+  skill: string;
+  description: string;
+}
+
+const KEYWORDS: KeywordDef[] = [
+  {
+    patterns: /\b(autopilot|auto[\s-]?pilot|full[\s-]?auto)\b/i,
+    skill: "autopilot",
+    description: "Full auto: plan → implement → test → review → complete",
+  },
+  {
+    patterns: /\b(plan|plan[\s-]?and[\s-]?execute|規劃)\b/i,
+    skill: "plan-and-execute",
+    description: "Plan first, then execute after user confirmation",
+  },
+  {
+    patterns: /\b(review|code[\s-]?review)\b/i,
+    skill: "code-review",
+    description: "Multi-perspective code review",
+  },
+  {
+    patterns: /\b(tdd|test[\s-]?first|test[\s-]?driven)\b/i,
+    skill: "debug-loop",
+    description: "Test-driven / debug loop workflow",
+  },
+  {
+    patterns: /\b(fix|debug|debug[\s-]?loop)\b/i,
+    skill: "debug-loop",
+    description: "Debug loop: fix → test → repeat until passing",
+  },
+  {
+    patterns: /\b(deep[\s-]?dive|deep[\s-]?analysis|分析)\b/i,
+    skill: "deep-analysis",
+    description: "Deep code analysis",
+  },
+  {
+    patterns: /\b(sync|同步|task[\s-]?sync)\b/i,
+    skill: "task-sync",
+    description: "Sync task status to Plane/GitLab/GitHub",
+  },
+];
+
+// --- Sanitization ---
+
+function sanitizePrompt(text: string): string {
+  let sanitized = text;
+  // Strip code blocks
+  sanitized = sanitized.replace(/```[\s\S]*?```/g, "");
+  sanitized = sanitized.replace(/`[^`]+`/g, "");
+  // Strip URLs
+  sanitized = sanitized.replace(/https?:\/\/\S+/g, "");
+  // Strip file paths
+  sanitized = sanitized.replace(/(?:\/[\w.-]+)+/g, "");
+  // Strip quoted strings
+  sanitized = sanitized.replace(/"[^"]*"/g, "");
+  sanitized = sanitized.replace(/'[^']*'/g, "");
+  return sanitized;
+}
+
+function isInformationalContext(text: string, match: RegExpMatchArray): boolean {
+  const start = Math.max(0, (match.index ?? 0) - 40);
+  const end = Math.min(text.length, (match.index ?? 0) + (match[0]?.length ?? 0) + 40);
+  const window = text.slice(start, end).toLowerCase();
+
+  const informationalPatterns = [
+    /what is/,
+    /how (?:do|does|to)/,
+    /explain/,
+    /tell me about/,
+    /什麼是/,
+    /怎麼/,
+  ];
+
+  return informationalPatterns.some((p) => p.test(window));
+}
+
+// --- Skill loading ---
+
+function loadSkillContent(skillName: string, cwd: string): string | null {
+  // Check project-level custom skills first
+  const projectSkillPath = join(cwd, ".arceus", "skills", skillName, "SKILL.md");
+  if (existsSync(projectSkillPath)) {
+    return readFileSync(projectSkillPath, "utf-8");
+  }
+
+  // Check plugin built-in skills
+  const pluginRoot = getPluginRoot();
+  const builtinPath = join(pluginRoot, "skills", skillName, "SKILL.md");
+  if (existsSync(builtinPath)) {
+    return readFileSync(builtinPath, "utf-8");
+  }
+
+  return null;
+}
+
+// --- Main ---
+
+async function main(): Promise<void> {
+  const input = await readStdin<UserPromptSubmitInput>();
+  const sanitized = sanitizePrompt(input.prompt);
+
+  // Detect keywords
+  let detectedSkill: KeywordDef | null = null;
+
+  for (const kw of KEYWORDS) {
+    const match = sanitized.match(kw.patterns);
+    if (match && !isInformationalContext(sanitized, match)) {
+      detectedSkill = kw;
+      break;
+    }
+  }
+
+  if (!detectedSkill) {
+    passThrough();
+    return;
+  }
+
+  // Log detection
+  const arceusDir = getArceusDir(input.cwd);
+  logEvent(arceusDir, input.session_id, {
+    timestamp: new Date().toISOString(),
+    event: "keyword_detected",
+    skill: detectedSkill.skill,
+    data: { keyword: detectedSkill.skill, prompt: input.prompt.slice(0, 200) },
+  });
+
+  // Load and inject skill content
+  const skillContent = loadSkillContent(detectedSkill.skill, input.cwd);
+
+  let additionalContext: string;
+  if (skillContent) {
+    additionalContext = `<arceus-skill name="${detectedSkill.skill}">
+[MAGIC KEYWORD DETECTED: ${detectedSkill.skill.toUpperCase()}]
+${detectedSkill.description}
+
+${skillContent}
+
+---
+Original user request:
+${input.prompt}
+</arceus-skill>`;
+  } else {
+    // Fallback: instruct Claude to use the skill
+    additionalContext = `<arceus-skill name="${detectedSkill.skill}">
+[MAGIC KEYWORD DETECTED: ${detectedSkill.skill.toUpperCase()}]
+${detectedSkill.description}
+
+You MUST invoke the Arceus ${detectedSkill.skill} skill. Follow the standard ${detectedSkill.skill} workflow:
+1. Understand the user's request
+2. Delegate to appropriate arceus agents via subagent
+3. Verify results with build/test/lint before marking complete
+</arceus-skill>`;
+  }
+
+  writeOutput({
+    continue: true,
+    hookSpecificOutput: {
+      hookEventName: "UserPromptSubmit",
+      additionalContext,
+    },
+  });
+}
+
+main().catch((err) => {
+  process.stderr.write(`arceus keyword-detector hook error: ${err}\n`);
+  process.exit(0);
+});

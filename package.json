@@ -1,0 +1,69 @@
+{
+  "name": "arceus",
+  "version": "0.2.0",
+  "description": "Claude Code plugin — multi-agent orchestration with magic keywords, skills, and evidence-driven verification",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    },
+    "./cli": {
+      "import": "./dist/cli.js"
+    }
+  },
+  "bin": {
+    "arceus": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    ".claude-plugin",
+    "hooks",
+    "agents",
+    "skills",
+    ".mcp.json"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikeqoo1/arceus.git"
+  },
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "ai-agent",
+    "orchestration",
+    "multi-agent",
+    "hooks",
+    "skills"
+  ],
+  "author": "seaflower",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/mikeqoo1/arceus/issues"
+  },
+  "homepage": "https://github.com/mikeqoo1/arceus#readme",
+  "dependencies": {
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
+    "eslint": "^10.2.0",
+    "prettier": "^3.8.3",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.4"
+  }
+}
