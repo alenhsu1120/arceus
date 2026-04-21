@@ -12,6 +12,12 @@ You are running in **Plan and Execute mode**. Create a plan first, get user conf
 
 ## Execution Steps
 
+### Step 0: Preflight — Check Branch State
+Before analysis or execution, check the working tree:
+- `git status`, `git log -5 --oneline`, `git diff` (if dirty)
+
+If the branch has unexpected WIP, surface it to the user before planning. The plan may need to account for existing changes rather than assuming a clean slate.
+
 ### Step 1: Analyze (delegate to arceus:planner)
 - Understand the full scope of the request
 - Research affected code and dependencies

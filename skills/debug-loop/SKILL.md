@@ -12,6 +12,12 @@ You are running in **Debug Loop mode**. Fix the issue through iterative test-fix
 
 ## Execution Steps
 
+### Step 0: Preflight — Check Branch State
+Before touching any code, check the working tree:
+- `git status`, `git log -5 --oneline`, `git diff` (if dirty)
+
+If there are uncommitted changes, decide with the user whether they're part of the bug being debugged or unrelated WIP that must be preserved. Fix-loops can iterate many edits — starting from a clean understanding of the baseline is essential.
+
 ### Step 1: Identify the Problem
 - Run the failing tests or commands to reproduce the issue
 - Read error messages and stack traces carefully

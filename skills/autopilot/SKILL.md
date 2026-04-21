@@ -12,6 +12,14 @@ You are running in **Autopilot mode**. Execute the full development cycle automa
 
 ## Execution Steps
 
+### Step 0: Preflight — Check Branch State
+Before any planning or code changes, inspect the working tree:
+- `git status` — any uncommitted / untracked files?
+- `git log -5 --oneline` — recent commits
+- `git diff` — if dirty, read the changes
+
+If the tree has modifications that don't look like yours, STOP and confirm with the user before proceeding. Autopilot must not silently overwrite in-progress work.
+
 ### Step 1: Understand Requirements
 - Read the user's request carefully
 - Identify affected files and components
