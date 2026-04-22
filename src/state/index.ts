@@ -10,3 +10,24 @@ export {
   ensureArceusDir,
 } from "./config.js";
 export type { ArceusProjectConfig, TaskSourceEntry } from "./config.js";
+
+export {
+  slugify,
+  ensureChangesDir,
+  createChange,
+  getChange,
+  listChanges,
+  updateChangeStatus,
+  archiveChange,
+  deleteChange,
+  readChangeFile,
+  writeChangeFile,
+} from "./changes.js";
+export type {
+  Change,
+  ChangeMeta,
+  ChangeStatus,
+  ChangeSummary,
+  CreateChangeOptions,
+  ListChangesOptions,
+} from "./changes.js";

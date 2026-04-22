@@ -14,6 +14,16 @@ export {
   readConfig,
   writeConfig,
   ensureArceusDir,
+  slugify,
+  ensureChangesDir,
+  createChange,
+  getChange,
+  listChanges,
+  updateChangeStatus,
+  archiveChange,
+  deleteChange,
+  readChangeFile,
+  writeChangeFile,
 } from "./state/index.js";
 
 export type {
@@ -21,6 +31,12 @@ export type {
   SessionEvent,
   ArceusProjectConfig,
   TaskSourceEntry,
+  Change,
+  ChangeMeta,
+  ChangeStatus,
+  ChangeSummary,
+  CreateChangeOptions,
+  ListChangesOptions,
 } from "./state/index.js";
 
 export type {
