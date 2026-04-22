@@ -4,7 +4,13 @@
 
 import { readStdin, writeOutput, getArceusDir } from "./utils.js";
 import type { SessionStartInput } from "./types.js";
-import { readNotepad, readConfig, ensureArceusDir, logEvent } from "../state/index.js";
+import {
+  readNotepad,
+  readConfig,
+  ensureArceusDir,
+  logEvent,
+  listChanges,
+} from "../state/index.js";
 
 async function main(): Promise<void> {
   const input = await readStdin<SessionStartInput>();
@@ -29,6 +35,9 @@ async function main(): Promise<void> {
 
 You have the Arceus plugin active. Available magic keywords:
 - **autopilot** — Full auto: plan → implement → test → review → complete
+- **propose** / **提案** — Draft a change proposal into .arceus/changes/
+- **apply** / **實作** — Implement an approved change proposal
+- **review-change** / **審查** — Review a change proposal before implementation
 - **plan** / **規劃** — Plan first, confirm with user, then execute
 - **review** — Multi-perspective code review
 - **test** / **tdd** — Test-driven development workflow
@@ -46,6 +55,29 @@ Available agents (use via subagent delegation):
 
 All tasks require evidence-driven verification (build/test/lint must pass).
 </arceus-plugin>`);
+
+  // Surface active changes so AI starts the session knowing what's in-flight
+  try {
+    const drafts = listChanges(arceusDir, { status: "draft" });
+    const actives = listChanges(arceusDir, { status: "active" });
+    if (drafts.length > 0 || actives.length > 0) {
+      const lines: string[] = ["<arceus-changes>", "Active change proposals:"];
+      for (const c of actives) {
+        lines.push(`- [active] ${c.id} — ${c.title}`);
+      }
+      for (const c of drafts) {
+        lines.push(`- [draft]  ${c.id} — ${c.title}`);
+      }
+      lines.push(
+        "",
+        "Use `npx arceus change show <id>` to read a proposal, or invoke the `apply` / `review-change` skills.",
+      );
+      lines.push("</arceus-changes>");
+      contextParts.push(lines.join("\n"));
+    }
+  } catch {
+    // Non-fatal: missing/corrupt changes dir should not block session start
+  }
 
   if (notepad) {
     contextParts.push(`<arceus-notepad>\n${notepad}\n</arceus-notepad>`);

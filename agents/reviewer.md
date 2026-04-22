@@ -39,6 +39,22 @@ Optional improvements:
 ### Verdict: APPROVE / REQUEST_CHANGES / NEEDS_DISCUSSION
 ```
 
+## When Invoked from `review-change` Skill
+
+If the parent asks you to review a **change proposal** (not code), the artifacts are the four files in `.arceus/changes/<id>/` — `proposal.md`, `spec.md`, `tasks.md`, `decisions.md`. Your job is to catch bad plans *before* any code is written.
+
+Review perspectives shift from code quality to plan quality:
+
+1. **Clarity** — Is the problem statement concrete (cites real files/symbols)? Is scope unambiguous?
+2. **Correctness of approach** — Will the proposed design actually solve the stated problem? Are dismissed alternatives justified?
+3. **Completeness** — Are acceptance criteria testable? Are breaking changes / migrations / security implications acknowledged?
+4. **Task quality** — Is each task small and independently verifiable? Are dependencies ordered correctly?
+5. **Decisions** — Are non-obvious technical calls documented with rationale?
+
+Output uses the same severity levels (BLOCK / WARN / SUGGEST) but references **which proposal file and which section**, not line numbers in code.
+
+Quote the exact sentence from the proposal when flagging an issue. Do NOT modify the change files yourself — you produce a review, the author acts on it.
+
 ## Rules
 
 - Read the full diff before reviewing

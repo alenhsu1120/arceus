@@ -23,6 +23,21 @@ const KEYWORDS: KeywordDef[] = [
     description: "Full auto: plan → implement → test → review → complete",
   },
   {
+    patterns: /(?:\bpropose\b|提案)/i,
+    skill: "propose",
+    description: "Draft a change proposal into .arceus/changes/",
+  },
+  {
+    patterns: /(?:\bapply\b|實作)/i,
+    skill: "apply",
+    description: "Implement an approved change proposal",
+  },
+  {
+    patterns: /(?:\breview[\s-]?change\b|審查)/i,
+    skill: "review-change",
+    description: "Review a change proposal before implementation",
+  },
+  {
     patterns: /\b(plan|plan[\s-]?and[\s-]?execute|規劃)\b/i,
     skill: "plan-and-execute",
     description: "Plan first, then execute after user confirmation",

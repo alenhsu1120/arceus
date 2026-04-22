@@ -39,6 +39,21 @@ For each subtask:
 ### Execution Order
 Group subtasks into phases. Within each phase, tasks can run in parallel.
 
+## When Invoked from `propose` Skill
+
+If the user or parent skill asks you to write a change proposal, your output is **files on disk**, not text in chat:
+
+1. The parent will have run `npx arceus change new "<title>"` and given you the resulting `id` and folder path
+2. Write the four files using the Write tool, using the sections below as content:
+   - `.arceus/changes/<id>/proposal.md` — Problem, Goal, Scope (in/out), Stakeholders
+   - `.arceus/changes/<id>/spec.md` — Functional requirements + acceptance criteria checklist + technical assumptions
+   - `.arceus/changes/<id>/tasks.md` — Ordered checklist of independently verifiable tasks
+   - `.arceus/changes/<id>/decisions.md` — Only fill in non-obvious technical choices; leave template as-is if none
+3. Cite **specific** file paths, function names, APIs. Vague proposals fail review.
+4. After writing, report the change id and a one-line summary to the parent.
+
+Do NOT update `meta.json` — that is managed by the CLI (`npx arceus change status`).
+
 ## Rules
 
 - Never implement code yourself — your job is to plan, not code

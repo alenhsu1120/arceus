@@ -47,7 +47,7 @@ src/
 ├── hooks/                    # Hook implementations (each is a standalone entry point)
 │   ├── types.ts              # Hook stdin/stdout protocol types
 │   ├── utils.ts              # Shared hook utilities (readStdin, writeOutput)
-│   ├── session-start.ts      # SessionStart: load .arceus/ state, inject context
+│   ├── session-start.ts      # SessionStart: load .arceus/ state + active changes
 │   ├── keyword-detector.ts   # UserPromptSubmit: magic keyword detection + skill injection
 │   ├── pre-tool-use.ts       # PreToolUse: safety checks on dangerous commands
 │   ├── post-tool-use.ts      # PostToolUse: log tool execution results
@@ -56,9 +56,10 @@ src/
 ├── state/                    # .arceus/ state management
 │   ├── notepad.ts            # Compaction-resistant persistent notes
 │   ├── session-log.ts        # JSONL event log per session
-│   └── config.ts             # Project config (.arceus/config.json)
+│   ├── config.ts             # Project config (.arceus/config.json)
+│   └── changes.ts            # Change proposal CRUD (.arceus/changes/<id>/)
 ├── index.ts                  # Main exports (state API + types)
-└── cli.ts                    # CLI (arceus init, arceus status)
+└── cli.ts                    # CLI (arceus init/status, arceus change new/list/show/status/archive)
 ```
 
 ### Hook Protocol
@@ -72,15 +73,43 @@ Hooks receive JSON on stdin from Claude Code and output JSON to stdout:
 | Keyword | Skill | Effect |
 |---------|-------|--------|
 | autopilot | autopilot | Full auto: plan → implement → test → review |
+| propose / 提案 | propose | Draft a change proposal into `.arceus/changes/<id>/` |
+| apply / 實作 | apply | Implement an approved change proposal |
+| review-change / 審查 | review-change | Review a change proposal before implementation |
 | plan / 規劃 | plan-and-execute | Plan first, confirm, then execute |
 | review | code-review | Multi-perspective code review |
 | fix / debug | debug-loop | Iterative fix until tests pass |
 | sync / 同步 | task-sync | Sync task status to platforms |
 | deep-dive / 分析 | deep-analysis | Deep code investigation |
 
+### Change-Driven Team Collaboration
+
+Arceus persists AI plans as git-trackable artifacts under `.arceus/changes/<YYYY-MM-DD-slug>/`:
+
+```
+.arceus/changes/2026-04-22-add-auth/
+├── proposal.md    # why — problem, goal, scope, stakeholders
+├── spec.md        # what — requirements + acceptance criteria (free markdown)
+├── tasks.md       # how — implementation checklist (AI ticks as it goes)
+├── decisions.md   # technical decisions + rationale
+└── meta.json      # id, status (draft/active/completed/archived), author, timestamps
+└── archive/       # completed changes move here
+```
+
+Typical flow:
+1. `propose` → AI creates skeleton + drafts content → human reviews via git → approves
+2. `npx arceus change status <id> active`
+3. `apply` → AI implements tasks.md → verifies → marks completed
+4. `npx arceus change archive <id>` once the linked PR merges
+
+CLI commands: `arceus change new|list|show|status|archive`
+
 ### Agents (subagent delegation)
 
 Agents are defined as markdown files in `agents/`. Used via Claude Code's Task/Agent system with `subagent_type="arceus:<name>"`.
+
+`arceus:planner` knows how to write proposals into `.arceus/changes/<id>/` when invoked from the `propose` skill.
+`arceus:reviewer` knows how to review proposals (not just code) when invoked from `review-change`.
 
 ### Evidence-Driven Verification
 
