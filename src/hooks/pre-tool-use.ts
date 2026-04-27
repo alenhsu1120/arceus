@@ -1,11 +1,25 @@
 /**
- * PreToolUse hook — safety checks before tool execution.
+ * PreToolUse hook — safety checks + git preflight before tool execution.
  */
 
-import { readStdin, writeOutput, passThrough } from "./utils.js";
+import { readStdin, writeOutput, passThrough, getArceusDir } from "./utils.js";
 import type { PreToolUseInput } from "./types.js";
+import {
+  readConfig,
+  runGitPreflight,
+  isPreflightDone,
+  markPreflightDone,
+} from "../state/index.js";
 
-// Dangerous command patterns to warn about
+// Tools that mutate the working tree — gated by preflight.
+const MODIFYING_TOOLS = new Set([
+  "Edit",
+  "Write",
+  "MultiEdit",
+  "NotebookEdit",
+]);
+
+// Dangerous command patterns to warn about (Bash only).
 const DANGEROUS_PATTERNS = [
   /\brm\s+-rf\s+[/~]/,
   /\bgit\s+push\s+--force/,
@@ -14,32 +28,87 @@ const DANGEROUS_PATTERNS = [
   /\bformat\s+[a-z]:/i,
 ];
 
+function denyEdit(reason: string, suggestedBranch?: string): void {
+  const guidance = suggestedBranch
+    ? `\n\nSuggested: \`git checkout -b ${suggestedBranch}\` then retry.`
+    : "";
+  writeOutput({
+    continue: true,
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason: `[Arceus Preflight] ${reason}`,
+      additionalContext: `${reason}${guidance}\n\n處理完之後再嘗試這次編輯。`,
+    },
+  });
+}
+
 async function main(): Promise<void> {
   const input = await readStdin<PreToolUseInput>();
 
-  if (input.tool_name !== "Bash") {
+  // Branch 1: dangerous Bash commands
+  if (input.tool_name === "Bash") {
+    const command = (input.tool_input["command"] as string) ?? "";
+    for (const pattern of DANGEROUS_PATTERNS) {
+      if (pattern.test(command)) {
+        writeOutput({
+          continue: true,
+          hookSpecificOutput: {
+            hookEventName: "PreToolUse",
+            permissionDecision: "ask",
+            permissionDecisionReason: `[Arceus Safety] Potentially dangerous command detected: ${command.slice(0, 100)}`,
+            additionalContext:
+              "Arceus flagged this command as potentially dangerous. Please confirm before proceeding.",
+          },
+        });
+        return;
+      }
+    }
     passThrough();
     return;
   }
 
-  const command = (input.tool_input["command"] as string) ?? "";
-
-  for (const pattern of DANGEROUS_PATTERNS) {
-    if (pattern.test(command)) {
-      writeOutput({
-        continue: true,
-        hookSpecificOutput: {
-          hookEventName: "PreToolUse",
-          permissionDecision: "ask",
-          permissionDecisionReason: `[Arceus Safety] Potentially dangerous command detected: ${command.slice(0, 100)}`,
-          additionalContext:
-            "Arceus flagged this command as potentially dangerous. Please confirm before proceeding.",
-        },
-      });
-      return;
-    }
+  // Branch 2: git preflight gate on first modifying tool call per session
+  if (!MODIFYING_TOOLS.has(input.tool_name)) {
+    passThrough();
+    return;
   }
 
+  const arceusDir = getArceusDir(input.cwd);
+
+  if (isPreflightDone(arceusDir, input.session_id)) {
+    passThrough();
+    return;
+  }
+
+  const config = readConfig(arceusDir);
+  if (config.preflight?.disabled) {
+    markPreflightDone(arceusDir, input.session_id);
+    passThrough();
+    return;
+  }
+
+  const result = runGitPreflight(input.cwd, {
+    ...(config.preflight?.protectedBranches !== undefined
+      ? { protectedBranches: config.preflight.protectedBranches }
+      : {}),
+    ...(config.preflight?.fetch !== undefined
+      ? { fetch: config.preflight.fetch }
+      : {}),
+    ...(config.preflight?.requireUpstreamSynced !== undefined
+      ? { requireUpstreamSynced: config.preflight.requireUpstreamSynced }
+      : {}),
+    ...(config.preflight?.fetchTimeoutMs !== undefined
+      ? { fetchTimeoutMs: config.preflight.fetchTimeoutMs }
+      : {}),
+  });
+
+  if (!result.ok) {
+    denyEdit(result.reason ?? "Preflight failed.", result.suggestedBranch);
+    return;
+  }
+
+  markPreflightDone(arceusDir, input.session_id);
   passThrough();
 }
 
