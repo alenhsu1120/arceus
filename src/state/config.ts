@@ -19,6 +19,19 @@ export interface ArceusProjectConfig {
   };
   /** Max retry rounds for verification failures */
   maxRetries?: number;
+  /** Preflight check tuning (PreToolUse hook) */
+  preflight?: {
+    /** Disable the preflight gate entirely. */
+    disabled?: boolean;
+    /** Branches that block edits. Defaults to main/master/develop/trunk. */
+    protectedBranches?: string[];
+    /** Run `git fetch` before the upstream check. Defaults to true. */
+    fetch?: boolean;
+    /** Block when local branch is behind upstream. Defaults to true. */
+    requireUpstreamSynced?: boolean;
+    /** Timeout for `git fetch` in ms. Defaults to 10000. */
+    fetchTimeoutMs?: number;
+  };
 }
 
 export interface TaskSourceEntry {
@@ -41,7 +54,12 @@ function getConfigPath(arceusDir: string): string {
 export function readConfig(arceusDir: string): ArceusProjectConfig {
   const path = getConfigPath(arceusDir);
   if (!existsSync(path)) return {};
-  return JSON.parse(readFileSync(path, "utf-8")) as ArceusProjectConfig;
+  try {
+    return JSON.parse(readFileSync(path, "utf-8")) as ArceusProjectConfig;
+  } catch {
+    // Malformed config.json should not bring down hooks; treat as empty.
+    return {};
+  }
 }
 
 export function writeConfig(

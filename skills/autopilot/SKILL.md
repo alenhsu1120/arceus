@@ -17,8 +17,19 @@ Before any planning or code changes, inspect the working tree:
 - `git status` — any uncommitted / untracked files?
 - `git log -5 --oneline` — recent commits
 - `git diff` — if dirty, read the changes
+- `git fetch --quiet` then `git status -sb` — confirm the local branch is not behind upstream
+- Current branch — if on `main`/`master`/`develop`/`trunk`, switch to a feature branch (suggest `feature/<task-slug>`) before any edit. The PreToolUse preflight hook will hard-block edits otherwise.
 
 If the tree has modifications that don't look like yours, STOP and confirm with the user before proceeding. Autopilot must not silently overwrite in-progress work.
+
+### Step 0.5: Check for Active Change Proposals
+Before planning from scratch, look for in-flight change proposals — the user may already have an approved spec waiting to be implemented:
+- Run `npx arceus change list --status active` (or read `.arceus/changes/<id>/meta.json` files)
+- **If exactly one `active` proposal exists**: STOP and ask the user "偵測到 active 提案 `<id>`，要走 `apply` 流程嗎？" Pivot to the `apply` skill if they confirm.
+- **If multiple `active` proposals exist**: STOP and list them, ask which to apply (or whether to start fresh autopilot).
+- **If none exist**: continue with Step 1.
+
+This avoids re-planning work that was already specified, and keeps the team-collaboration trail intact.
 
 ### Step 1: Understand Requirements
 - Read the user's request carefully

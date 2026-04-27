@@ -12,6 +12,14 @@ export {
 export type { ArceusProjectConfig, TaskSourceEntry } from "./config.js";
 
 export {
+  runGitPreflight,
+  getPreflightMarkerPath,
+  isPreflightDone,
+  markPreflightDone,
+} from "./preflight.js";
+export type { PreflightOptions, PreflightResult } from "./preflight.js";
+
+export {
   slugify,
   ensureChangesDir,
   createChange,

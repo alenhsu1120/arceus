@@ -6,7 +6,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { readStdin, writeOutput, passThrough, getArceusDir, getPluginRoot } from "./utils.js";
 import type { UserPromptSubmitInput } from "./types.js";
-import { logEvent } from "../state/index.js";
+import { logEvent, listChanges } from "../state/index.js";
 
 // --- Keyword definitions ---
 
@@ -156,11 +156,25 @@ async function main(): Promise<void> {
   // Load and inject skill content
   const skillContent = loadSkillContent(detectedSkill.skill, input.cwd);
 
+  // For autopilot: surface active change proposals so AI knows to consider routing to `apply`
+  let activeChangesNotice = "";
+  if (detectedSkill.skill === "autopilot") {
+    try {
+      const actives = listChanges(arceusDir, { status: "active" });
+      if (actives.length > 0) {
+        const lines = actives.map((c) => `  - ${c.id} — ${c.title}`).join("\n");
+        activeChangesNotice = `\n\n[ACTIVE CHANGE PROPOSALS DETECTED]\n${lines}\n\nBefore planning from scratch, STOP and ask the user whether autopilot should pivot to the \`apply\` skill for one of these proposals (Step 0.5).`;
+      }
+    } catch {
+      // Non-fatal: missing/corrupt changes dir should not block keyword detection
+    }
+  }
+
   let additionalContext: string;
   if (skillContent) {
     additionalContext = `<arceus-skill name="${detectedSkill.skill}">
 [MAGIC KEYWORD DETECTED: ${detectedSkill.skill.toUpperCase()}]
-${detectedSkill.description}
+${detectedSkill.description}${activeChangesNotice}
 
 ${skillContent}
 
@@ -172,7 +186,7 @@ ${input.prompt}
     // Fallback: instruct Claude to use the skill
     additionalContext = `<arceus-skill name="${detectedSkill.skill}">
 [MAGIC KEYWORD DETECTED: ${detectedSkill.skill.toUpperCase()}]
-${detectedSkill.description}
+${detectedSkill.description}${activeChangesNotice}
 
 You MUST invoke the Arceus ${detectedSkill.skill} skill. Follow the standard ${detectedSkill.skill} workflow:
 1. Understand the user's request
