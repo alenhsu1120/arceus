@@ -1,0 +1,19 @@
+{
+  "name": "arceus-local",
+  "owner": {
+    "name": "alenhsu1120",
+    "email": "114036@concords.com.tw"
+  },
+  "metadata": {
+    "description": "Local marketplace wrapping the arceus multi-agent orchestration plugin",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "arceus",
+      "source": "./",
+      "description": "Multi-agent orchestration plugin for Claude Code — magic keywords, skills, subagent delegation, evidence-driven verification",
+      "version": "0.1.0"
+    }
+  ]
+}
