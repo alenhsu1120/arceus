@@ -54,6 +54,21 @@ review 目前的 diff
 debug 這個測試為什麼失敗
 ```
 
+## Agents
+
+| Agent | 說明 | Model | Level |
+|---|---|---|---|
+| `planner` | 需求分析、風險評估、任務拆解 | claude-opus-4-6 | 3 |
+| `coder` | 專注實作程式碼（RPG → Python FastAPI 轉換 SOP） | claude-sonnet-4-6 | 2 |
+| `tester` | 執行驗證指令並回報通過/失敗結果 | claude-sonnet-4-6 | 2 |
+| `reviewer` | 多角度程式碼審查（正確性、安全性、效能、風格） | claude-sonnet-4-6 | 2 |
+| `task-syncer` | 同步任務狀態到 Plane/GitLab/GitHub | claude-haiku-4-5 | 1 |
+| `researcher` | 為 Job 模組寫 README.md | claude-sonnet-4-6 | 2 |
+| `api-writer` | 寫 FastAPI endpoint 檔案並註冊到路由檔 | claude-sonnet-4-6 | 2 |
+| `rpg-analyzer` | 分析 RPG/CLP 原始檔，追蹤引用的程式和檔案，複製到 Data/ 目錄 | claude-sonnet-4-6 | 2 |
+
+Agent 定義位於 [`agents/*.md`](agents/)。
+
 ## 架構
 
 ```
