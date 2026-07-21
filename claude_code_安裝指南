@@ -1,76 +1,6 @@
 # Claude Code 安裝與使用指南
 
-## 1. Claude Code 簡介
-
-Claude Code 是 Anthropic 提供給工程師使用的 AI 程式開發工具。
-
-它透過 Terminal（命令列）操作，可以協助工程師：
-
-- 分析整個 Git 專案架構
-- 閱讀程式碼
-- 搜尋程式問題
-- 修改程式檔案
-- 協助 Debug
-- 執行測試指令
-- 分析 Git diff
-- 協助重構大型專案
-
-基本使用流程：
-
-```text
-使用者
-  |
-  v
-Terminal 輸入需求
-  |
-  v
-Claude Code 分析專案
-  |
-  v
-修改程式 / 執行測試 / 提供建議
-```
-
----
-
-# 2. 使用情境
-
-Claude Code 適合以下開發工作：
-
-## C++
-
-- 分析 C++ 專案架構
-- Memory Leak 分析
-- Thread Safety 檢查
-- Class 設計改善
-- CMake 問題排查
-- Code Refactoring
-
-
-## Python
-
-- FastAPI 開發
-- Script Debug
-- Data Processing
-- API 設計
-
-
-## Node.js
-
-- API 開發
-- Prisma Database 操作
-- Redis 整合
-- Service Debug
-
-
-## Git
-
-- 分析 commit
-- 檢查 diff
-- 協助 Merge Conflict 處理
-
----
-
-# 3. 系統需求
+# 1. 系統需求
 
 ## 支援環境
 
@@ -102,7 +32,7 @@ Linux Server / VM
 
 ---
 
-# 4. 安裝 Node.js
+# 2. 安裝 Node.js
 
 Claude Code 需要 Node.js 環境。
 
@@ -126,7 +56,7 @@ Node.js >= 18
 
 ---
 
-## 4.1 Rocky Linux 安裝 Node.js
+## 2.1 Rocky Linux 安裝 Node.js
 
 查看是否已安裝：
 
@@ -149,7 +79,7 @@ npm -v
 
 ---
 
-## 4.2 Ubuntu / Debian 安裝 Node.js
+## 2.2 Ubuntu / Debian 安裝 Node.js
 
 更新套件：
 
@@ -172,7 +102,7 @@ npm -v
 
 ---
 
-# 5. 安裝 Claude Code
+# 3. 安裝 Claude Code
 
 ## 5.1 Linux / macOS 安裝
 
@@ -184,7 +114,7 @@ curl -fsSL https://claude.ai/install.sh | bash
 
 ---
 
-## 5.2 Windows PowerShell 安裝
+## 3.2 Windows PowerShell 安裝
 
 開啟 PowerShell：
 
@@ -194,7 +124,7 @@ irm https://claude.ai/install.ps1 | iex
 
 ---
 
-# 6. 確認 Claude Code 安裝成功
+# 4. 確認 Claude Code 安裝成功
 
 查看版本：
 
@@ -210,7 +140,7 @@ Claude Code version x.x.x
 
 ---
 
-# 7. 登入 Claude 帳號
+# 5. 登入 Claude 帳號
 
 第一次使用：
 
@@ -236,7 +166,7 @@ Logged in successfully
 
 ---
 
-# 8. 在 Git 專案中使用 Claude Code
+# 6. 在 Git 專案中使用 Claude Code
 
 進入專案目錄：
 
@@ -260,97 +190,8 @@ claude
 
 ---
 
-# 9. 常用指令與使用範例
 
-## 9.1 分析專案架構
-
-輸入：
-
-```text
-幫我分析這個專案的架構
-```
-
-Claude Code 會分析：
-
-```text
-src/
-include/
-CMakeLists.txt
-config/
-database/
-```
-
-並說明各模組用途。
-
----
-
-## 9.2 分析程式碼
-
-範例：
-
-```text
-幫我分析這個 class 的責任
-```
-
-或：
-
-```text
-說明這個 function 的流程
-```
-
----
-
-## 9.3 找 Bug
-
-範例：
-
-```text
-幫我找這段程式可能造成 memory leak 的地方
-```
-
-或：
-
-```text
-幫我分析 Redis connection pool 是否有 thread safety 問題
-```
-
----
-
-## 9.4 修改程式
-
-範例：
-
-```text
-幫我把這個 function 改成 thread safe
-```
-
-Claude Code 會：
-
-1. 找相關檔案
-2. 分析目前程式
-3. 提出修改內容
-4. 套用修改
-
-
----
-
-## 9.5 Git 分析
-
-查看目前修改：
-
-```text
-幫我檢查目前 git diff
-```
-
-可協助：
-
-- review 修改內容
-- 找可能問題
-- 建議 commit message
-
----
-
-# 10. VSCode 搭配 Claude Code
+# 7. VSCode 搭配 Claude Code
 
 推薦使用方式：
 
@@ -384,209 +225,3 @@ claude
 即可讓 Claude Code 分析目前專案。
 
 ---
-
-# 11. 多台主機登入同一 Claude 帳號
-
-Claude Code 支援多台主機登入同一帳號。
-
-例如：
-
-```text
-主機 A
-
-Windows
- |
- └── Claude Code
-
-
-主機 B
-
-Rocky Linux VM
- |
- └── Claude Code
-```
-
-兩台都執行：
-
-```bash
-claude
-```
-
-並登入相同 Claude 帳號即可。
-
----
-
-## 注意事項
-
-### 使用額度共用
-
-多台主機使用：
-
-- 共用同一 Claude 帳號
-- 共用使用額度
-- 不會各自獨立計算
-
-
-例如：
-
-```text
-Windows 使用 Claude Code
-        +
-Rocky Linux 使用 Claude Code
-
-        ↓
-
-消耗同一份額度
-```
-
-
-### 不建議多人共用帳號
-
-避免：
-
-- 額度快速消耗
-- 登入異常
-- 權限管理問題
-
----
-
-# 12. 大型專案建議使用流程
-
-不要一開始直接要求修改大型功能。
-
-建議流程：
-
-## Step 1：先理解專案
-
-輸入：
-
-```text
-分析整個專案架構，說明主要模組與資料流程
-```
-
-
-## Step 2：了解模組
-
-輸入：
-
-```text
-分析這個 module 的責任與設計目的
-```
-
-
-## Step 3：修改功能
-
-輸入：
-
-```text
-修改這個功能，並保持原有架構
-```
-
-
-## Step 4：測試
-
-輸入：
-
-```text
-幫我確認修改後是否有潛在問題
-```
-
----
-
-# 13. 建議開發配置範例
-
-```text
-Windows PC
-
- |
- |
- | SSH
- |
- v
-
-Rocky Linux VM
-
- |
- ├── Git
- ├── GCC
- ├── CMake
- ├── Node.js
- ├── Python
- └── Claude Code
-```
-
-適合：
-
-- C++ Trading System
-- FastAPI Service
-- Node.js Service
-- GitLab CI/CD 開發流程
-
----
-
-# 14. 常見問題
-
-## Q1. Claude Code 可以讀整個 Repository 嗎？
-
-可以。
-
-在 Git Repository 根目錄執行：
-
-```bash
-claude
-```
-
-即可分析目前專案。
-
----
-
-## Q2. Claude Code 會直接修改檔案嗎？
-
-會。
-
-通常會：
-
-1. 分析修改內容
-2. 顯示變更
-3. 依照權限套用修改
-
-
----
-
-## Q3. 可以在兩台電腦同時使用嗎？
-
-可以。
-
-但是：
-
-- 使用額度共用
-- 使用量會累積
-
-
----
-
-## Q4. Claude Code 是否需要 VSCode？
-
-不需要。
-
-Claude Code 本身是 Terminal 工具。
-
-VSCode 只是推薦搭配使用。
-
----
-
-# 15. 完成
-
-安裝完成後，在任何 Git 專案目錄執行：
-
-```bash
-claude
-```
-
-即可開始使用 Claude Code 協助：
-
-- 程式分析
-- Debug
-- Refactoring
-- 功能開發
-- Code Review
