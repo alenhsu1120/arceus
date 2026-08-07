@@ -46,6 +46,7 @@ verification: [build, test]
 ## Step 3：tester（delegate to arceus:tester）
 
 - 執行驗證（例如 `python3 -m py_compile ...`、既有的 `tests/<EE_CODE>/Job<NN>/` 測試、必要時的 DB 連線驗證）。
+- **不要用 `python3 -c "..."` 之類的臨時腳本去戳 DB 連線或查表是否存在**——這類指令屬於 Step 0 point 4 講的「任意程式碼/任意 SQL 執行風險」類別，一定會跳出權限確認框；在無人值守模式下沒有人會去按確認，指令就會卡住等到 timeout，等同整條管線卡死。驗證 DB 相關邏輯一律走專案既有的測試執行慣例（例如 `python -m tests.<EE_CODE>.Job<NN>.test_job<NN>`，真實 DB、insert→call→assert→delete），不要另外寫探測腳本。若這個既有測試指令本身也跳出權限確認框（尚未被使用者加入白名單），視同 Bash 類中斷來源已知風險，直接在總結報告記錄「此指令需要人工確認 Bash 權限，未能自動執行」並繼續下一步，不要重試、不要改用其他指令繞過。
 - **失敗自動修復迴圈，最多 3 輪**：測試失敗 → 交回 arceus:coder 修正根因 → 重新測試。3 輪後仍失敗，不要卡住等待確認——記錄失敗細節與已嘗試的修正，直接進入 Step 4（若 api-writer 明顯依賴未修好的邏輯則跳過該 Job 的 Step 4，在最終總結中標註「未完成，待人工確認」），繼續處理下一個 Job（如果有多個）。
 
 ## Step 4：api-writer（delegate to arceus:api-writer）
