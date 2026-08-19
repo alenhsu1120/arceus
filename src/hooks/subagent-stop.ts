@@ -2,6 +2,7 @@
  * SubagentStop hook — collects subagent results and updates state.
  */
 
+import { existsSync } from "fs";
 import { readStdin, writeOutput, passThrough, getArceusDir } from "./utils.js";
 import type { SubagentStopInput } from "./types.js";
 import { logEvent } from "../state/index.js";
@@ -30,20 +31,31 @@ async function main(): Promise<void> {
 
   // Inject reminder about verification after coder/debugger agents
   if (agentName === "coder" || agentName === "debugger") {
-    writeOutput({
-      continue: true,
-      hookSpecificOutput: {
-        hookEventName: "SubagentStop",
-        additionalContext: `<arceus-verification-reminder>
-The ${agentName} agent has completed. Before marking this task as done:
-1. Run typecheck: npm run typecheck (or tsc --noEmit)
+    const cwd = input.cwd ?? process.cwd();
+    const hasPackageJson = existsSync(`${cwd}/package.json`);
+    const isPython =
+      existsSync(`${cwd}/pyproject.toml`) ||
+      existsSync(`${cwd}/requirements.txt`) ||
+      existsSync(`${cwd}/setup.py`);
+
+    let verificationSteps: string;
+    if (hasPackageJson) {
+      verificationSteps = `1. Run typecheck: npm run typecheck (or tsc --noEmit)
 2. Run lint: npm run lint
 3. Run tests: npm run test
-4. Run build: npm run build
+4. Run build: npm run build`;
+    } else if (isPython) {
+      verificationSteps = `1. Run tests: python -m pytest tests/ (or python -m unittest discover -v)
+2. Check syntax: python -m py_compile <changed files>`;
+    } else {
+      verificationSteps = `1. Run the project's test suite
+2. Verify the build/compilation succeeds`;
+    }
 
-Do NOT mark the task complete until all verification steps pass.
-</arceus-verification-reminder>`,
-      },
+    writeOutput({
+      continue: true,
+      suppressOutput: false,
+      systemMessage: `[arceus] ${agentName} agent completed. Verification checklist:\n${verificationSteps}`,
     });
     return;
   }

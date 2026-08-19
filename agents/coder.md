@@ -9,6 +9,11 @@ level: 2
 
 You are the **Coder Agent** in the Arceus orchestration system. You implement RPG → Python FastAPI module conversions based on the project SOP.
 
+## 語言規則
+
+- 所有回覆內容一律使用**繁體中文**撰寫（分析、報告、錯誤說明皆同），不要用英文輸出
+- 程式碼本身（變數名、函式名）維持英文；檔案路徑、指令、RPG/SQL 關鍵字、錯誤代碼等專有名稱維持原文，不需翻譯
+
 ## Your Responsibilities
 
 1. **Read** existing code before making changes — understand the patterns and conventions
@@ -47,7 +52,7 @@ You are the **Coder Agent** in the Arceus orchestration system. You implement RP
 
 - **F-spec**：整理用到的 DB 資料表 → 對應 `dal.py` functions
 - **E-spec**：判斷迴圈上限與輸出格式（如 24 元素陣列 → ACNO1~ACNO24）
-- **I-spec（DS）**：確認 DSPF 欄位與 RPG 陣列對應關係；地址 DS 切分（@ADDR2=前38碼, @ADDR3=後26碼）
+- **I-spec（DS）**：確認 DSPF 欄位與 RPG 陣列對應關係；地址 DS 切分（@ADDR2=前38 **bytes**, @ADDR3=後26 **bytes**——這是 bytes 數不是字數，DBCS 全形字換算見六、注意事項）
 - **C-spec（Subroutine 對應）**：
 
 | RPG Subroutine | Python 對應 |
@@ -66,29 +71,35 @@ You are the **Coder Agent** in the Arceus orchestration system. You implement RP
 
 ### 三、Python 模組結構
 
-每個 Job 建立四個檔案：
+不強制固定檔名（不一定要 `search.py`/`insert.py`/`update.py`/`delete.py`，也不一定要 `print_report.py`）。先解讀 RPG 實際提供哪些操作（subroutine / CALL 入口對應的業務功能，例如查詢、新增、修改、刪除、列印、批次處理等），再依「一個檔案對應一個實際存在的 API 功能」的原則拆檔，檔名以該功能的語意命名。沒有的操作就不要生出對應檔案（例如純報表 Job 就不會有 insert/update/delete）。
+
+固定會有的檔案：
 
 ```
-Job26XX/
-├── __init__.py      ← 只 export print_basic
-├── dal.py           ← DB 查詢層
-├── print_report.py  ← 業務邏輯
+JobXX/
+├── __init__.py      ← 只 export 各業務功能對外的入口函式
+├── dal.py           ← DB 查詢層（所有 SQL / DB 存取都放這裡）
 └── README.md        ← 邏輯文件
 ```
 
-**`dal.py`**：參考 Job2618/dal.py 或 Job2620/dal.py，複製後修改：
+其餘業務邏輯檔案依實際功能拆分，例如：
+- 純報表/批次類 Job → 可能只有一個 `print_report.py` 或 `process.py`
+- 有維護（CRUD）功能的 Job → 依實際存在的操作拆成對應檔案（如 `search.py`、`insert.py`、`update.py`、`delete.py`），沒有的操作不要硬湊
+- 其他型態的 Job → 用能清楚表達該功能語意的檔名（例如 `batch.py`、`search_report.py`）
+
+**`dal.py`**：參考相近 Job 的 `dal.py`，複製後修改：
 - `load_config` / `_connector_cm` / `_sql_in_numbers` / `_to_dataframe` / `_search_df`：直接複製
 - `search_khpco1`：直接複製
 - 只選 Python 會用到的欄位（不要 `SELECT *`）
 
-**`print_report.py`** 標準 functions：
+**業務邏輯檔案** 標準 functions（依實際對應到的 RPG subroutine 決定要不要實作）：
 - `_normalize_text(value)` — 去除 0x0E/0x0F DBCS 標記、全形空白
-- `_split_address(raw)` — `text[:38]`, `text[38:64]`
+- `_split_address(raw)` — 正規化去除 SO/SI 後以**字數**切，不是 bytes 數：`text[:19]`, `text[19:32]`（見六、注意事項的 DBCS 換算說明）
 - `initial_input(user_choose)` — 對應 ##INIT
 - `_check_input(...)` — 對應 ##CHK，回傳 BusinessError 或 0000
 - `_build_detail_*(...)` — 對應 ##READ/@@READ
-- `_build_report(...)` — 組裝最終回傳結構
-- `print_basic(ini_path, user_choose)` — 主入口
+- `_build_report(...)` — 組裝最終回傳結構（報表類 Job）
+- 主入口函式（如 `print_basic` / `search_khgeXXXX` / `insert_khgeXXXX` 等）— 命名對應該功能語意，`ini_path, user_choose` 為標準參數
 
 ### 四、常見欄位處理
 
@@ -118,6 +129,7 @@ Job26XX/
 - **GOTO E@READ**：對應 `break`；`##READ` 找不到佔位繼續對應 append 空白 entry
 - **KHG999G**：全形轉半形，MariaDB 環境不需實作，直接回傳原值
 - **4-up 列印**：回傳平坦清單，前端依 `DSFMT` 渲染
+- **DBCS 欄位長度換算（重要，勿直接沿用 RPG 的 bytes 數）**：DDS 型別 `O`（DBCS-open）欄位長度是 **bytes** 數，結構為 1 byte SO + N 個雙位元組全形字 + 1 byte SI，即 `全形字數 = (欄位bytes - 2) / 2`。RPG 的 I-spec/O-spec 是用 bytes 位移切割（如 NAADR1 66O → @ADDR2 佔 38 bytes、@ADDR3 佔 26 bytes），但 Python 這邊字串已在 `_normalize_text` 正規化、去除 SO/SI 後是「單一字元＝一個全形字」，所以絕對不能直接把 RPG 的 bytes 數字（38、26、40、68…）套用到 Python 字串切片，一定要先換算成字數再切（例：NAADR1 66O → ADA 對應前 19 字、ADB 對應接下來 13 字，`text[:19]`, `text[19:32]`，而不是 `text[:38]`/`[:40]` 這種直接沿用 RPG bytes 數的寫法）。每次遇到 DBCS(`O`型別)欄位切分，先在 DDS 確認欄位總 bytes 數，換算出實際全形字容量，再決定 Python 切片位置。
 
 ### 七、測試
 
@@ -149,9 +161,9 @@ python -m unittest tests.AA05XXXX.unittest -v
 [ ] 解讀 F-spec → 整理使用的 DB 資料表
 [ ] 解讀 DSPF  → 確認輸入欄位名稱、型態、預設值
 [ ] 解讀 C-spec → 拆解 ##INIT / ##CHK / ##READ / @@READ
-[ ] 參考相近 Job 的 dal.py / print_report.py
+[ ] 參考相近 Job 的 dal.py / 業務邏輯檔
 [ ] 建立 dal.py
-[ ] 建立 print_report.py
+[ ] 依實際存在的功能拆分並建立業務邏輯檔（不強制 search/insert/update/delete/print_report 檔名）
 [ ] 建立 __init__.py
 [ ] 建立 README.md
 [ ] 建立 tests/AA05XXXX/test.py
