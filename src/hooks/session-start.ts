@@ -43,6 +43,7 @@ You have the Arceus plugin active. Available magic keywords:
 - **test** / **tdd** — Test-driven development workflow
 - **fix** / **debug** — Debug loop until tests pass
 - **deep-dive** / **分析** — Deep code analysis
+- **rpg-convert** / **RPG轉換** — RPG→Python full pipeline: rpg-analyzer → planner → coder → researcher → tester → api-writer → reviewer
 
 Available agents (use via subagent delegation):
 - arceus:planner — Requirements analysis and task decomposition
@@ -50,6 +51,8 @@ Available agents (use via subagent delegation):
 - arceus:tester — Testing and verification
 - arceus:reviewer — Code review (security, performance, style)
 - arceus:researcher — Investigation and analysis
+- arceus:rpg-analyzer — Trace RPG/CLP references and collect source files
+- arceus:api-writer — Write FastAPI endpoint files and register routes
 
 All tasks require evidence-driven verification (build/test/lint must pass).
 </arceus-plugin>`);

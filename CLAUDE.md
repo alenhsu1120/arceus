@@ -80,6 +80,7 @@ Hooks receive JSON on stdin from Claude Code and output JSON to stdout:
 | review | code-review | Multi-perspective code review |
 | fix / debug | debug-loop | Iterative fix until tests pass |
 | deep-dive / 分析 | deep-analysis | Deep code investigation |
+| rpg-convert / RPG轉換 | rpg-convert | RPG→Python full pipeline: rpg-analyzer → planner → coder → researcher → tester → api-writer → reviewer |
 
 ### Change-Driven Team Collaboration
 

@@ -62,6 +62,11 @@ const KEYWORDS: KeywordDef[] = [
     skill: "deep-analysis",
     description: "Deep code analysis",
   },
+  {
+    patterns: /\b(rpg[\s-]?convert)\b|RPG轉換|RPG全流程轉換/i,
+    skill: "rpg-convert",
+    description: "RPG→Python 全流程轉換：rpg-analyzer → planner → coder → researcher → tester → api-writer → reviewer",
+  },
 ];
 
 // --- Sanitization ---
