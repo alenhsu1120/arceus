@@ -43,14 +43,12 @@ You have the Arceus plugin active. Available magic keywords:
 - **test** / **tdd** — Test-driven development workflow
 - **fix** / **debug** — Debug loop until tests pass
 - **deep-dive** / **分析** — Deep code analysis
-- **sync** / **同步** — Sync task status to Plane/GitLab/GitHub
 
 Available agents (use via subagent delegation):
 - arceus:planner — Requirements analysis and task decomposition
 - arceus:coder — Code implementation
 - arceus:tester — Testing and verification
 - arceus:reviewer — Code review (security, performance, style)
-- arceus:task-syncer — External platform sync
 - arceus:researcher — Investigation and analysis
 
 All tasks require evidence-driven verification (build/test/lint must pass).

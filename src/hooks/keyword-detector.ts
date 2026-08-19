@@ -62,11 +62,6 @@ const KEYWORDS: KeywordDef[] = [
     skill: "deep-analysis",
     description: "Deep code analysis",
   },
-  {
-    patterns: /\b(sync|同步|task[\s-]?sync)\b/i,
-    skill: "task-sync",
-    description: "Sync task status to Plane/GitLab/GitHub",
-  },
 ];
 
 // --- Sanitization ---

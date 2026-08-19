@@ -7,8 +7,8 @@ Claude Code 多 Agent 協作插件。透過 magic keywords 觸發工作流，用
 ## 功能
 
 - **Magic Keywords** — 在 Claude Code 裡用自然語言觸發工作流
-- **7 種 Skills** — autopilot、plan-and-execute、code-review、debug-loop、task-sync、deep-analysis、rpg-pipeline
-- **6 個 Agents** — planner、coder、tester、reviewer、task-syncer、researcher
+- **5 種 Skills** — autopilot、plan-and-execute、code-review、debug-loop、deep-analysis
+- **5 個 Agents** — planner、coder、tester、reviewer、researcher
 - **Evidence-Driven** — 任務完成前必須通過 build/test/lint 驗證
 - **持久化狀態** — `.arceus/` 目錄保存 notepad、session log、config
 
@@ -39,9 +39,7 @@ arceus init
 | `plan` / `規劃` | 先出計畫，確認後再執行 |
 | `review` | 多角度 code review |
 | `fix` / `debug` | 反覆除錯直到測試通過 |
-| `sync` / `同步` | 同步任務狀態到 Plane/GitLab/GitHub |
 | `deep-dive` / `分析` | 深度程式碼分析 |
-| `rpg-pipeline` / `無人值守` | RPG→Python 全自動轉換：rpg-analyzer → coder → tester → api-writer 依序執行，全程不中斷詢問 |
 
 ### 範例
 
@@ -63,7 +61,6 @@ debug 這個測試為什麼失敗
 | `coder` | 專注實作程式碼（RPG → Python FastAPI 轉換 SOP） | claude-sonnet-4-6 | 2 |
 | `tester` | 執行驗證指令並回報通過/失敗結果 | claude-sonnet-4-6 | 2 |
 | `reviewer` | 多角度程式碼審查（正確性、安全性、效能、風格） | claude-sonnet-4-6 | 2 |
-| `task-syncer` | 同步任務狀態到 Plane/GitLab/GitHub | claude-haiku-4-5 | 1 |
 | `researcher` | 為 Job 模組寫 README.md | claude-sonnet-4-6 | 2 |
 | `api-writer` | 寫 FastAPI endpoint 檔案並註冊到路由檔 | claude-sonnet-4-6 | 2 |
 | `rpg-analyzer` | 分析 RPG/CLP 原始檔，追蹤引用的程式和檔案，複製到 Data/ 目錄 | claude-sonnet-4-6 | 2 |

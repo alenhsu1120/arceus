@@ -79,7 +79,6 @@ Hooks receive JSON on stdin from Claude Code and output JSON to stdout:
 | plan / 規劃 | plan-and-execute | Plan first, confirm, then execute |
 | review | code-review | Multi-perspective code review |
 | fix / debug | debug-loop | Iterative fix until tests pass |
-| sync / 同步 | task-sync | Sync task status to platforms |
 | deep-dive / 分析 | deep-analysis | Deep code investigation |
 
 ### Change-Driven Team Collaboration
