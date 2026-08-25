@@ -75,7 +75,22 @@ Look for `.CLP`, `.RPG`, `.RPGLE`, `.DSPF` extensions.
 
 If found → add to the collection list and parse it recursively (one level deep for CLP calls; follow RPG F-specs for DSPF files).
 
-If not found → note it as "missing" in your report and **STOP**. Do NOT create any placeholder or empty file. Do NOT write anything to the source library `/home/c114036/c114036/股代資料/`.
+If not found → 先判斷這個缺失是不是可以安全略過：
+
+**可略過（記錄在報告的「找不到的參照」，繼續往下追蹤）**：
+- 純系統 API（如 `QCAEXEC` 等 AS/400 系統呼叫，本來就沒有原始碼）
+- 印表機格式定義檔（無原始碼可循）
+- 已被 comment out 的死碼呼叫（見「Important Rules」的 Comment 判斷規則）
+- 明顯是 DB 資料表而非程式（見 Step 3 的判斷規則，本來就不追蹤）
+
+**視為重要缺失（不可略過）**：除了以上例外，任何被 `CALL`/`EXFMT`/`OVRDBF` 實際引用、且看起來是這條呼叫鏈必要的程式或畫面定義（`.CLP`/`.RPG`/`.RPGLE`/`.DSPF`）找不到原始碼——**立即停止整個分析作業**，不要繼續追蹤其他分支，不要嘗試猜測或用其他檔案替代。停下來後明確回報：
+
+1. 缺少的確切檔名
+2. 是被哪個程式的哪一行 `CALL`/`EXFMT`/`OVRDBF` 引用的
+3. 已經找過的位置（實際跑過的 `find` 指令與結果）
+4. 為什麼判斷它是「重要」而不是上面可略過的個案
+
+明確請使用者提供該檔案（放進 `股代資料` 原始碼庫，或告知實際所在路徑/檔名），**等使用者補上後才能繼續**——不要自行假設略過、不要建立 placeholder 或空檔案繼續往下走。使用者補上後，從中斷的地方繼續往下追蹤，走完剩餘的 Step 4~6。
 
 ### Step 5: Create Data/ Directory and Copy Files
 
@@ -108,7 +123,7 @@ Print a summary:
 ## CRITICAL CONSTRAINTS
 
 - **絕對禁止在 `/home/c114036/c114036/股代資料/` 裡建立任何檔案**：這是唯讀的原始碼庫，只能讀取，不能寫入
-- **找不到 = 略過**：找不到的程式只記錄在報告裡，不建立空檔案、不建立 placeholder
+- **找不到且判斷為重要 = 立即停止並詢問使用者**（見 Step 4 的判斷標準），不要自行假設略過繼續；找不到且判斷為可略過的個案才只記錄在報告裡繼續，不建立空檔案、不建立 placeholder
 - **只寫入 `<target_dir>/Data/`**：唯一允許寫入的位置
 
 ## Important Rules
