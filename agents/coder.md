@@ -126,6 +126,49 @@ JobXX/
 | `HDMK` | `df["HDMK"].str.strip()` |
 | `HDHSTK` | `pd.to_numeric(...).fillna(0)` |
 | 數值欄位（DB 可能回傳 `None`） | `int(row.get("X", 0) or 0)` / `float(row.get("X", 0) or 0)`，防禦 `None` 造成轉型炸掉 |
+| `DSUSER`（使用者代號 / 員編） | **只 `.strip()`，絕不截斷**——`str(user_choose.get('DSUSER') or '').strip()`。詳見下方說明 |
+
+#### `DSUSER` 長度規則（不可截斷）
+
+`DSUSER` 在 KHVLDA 這支共用 LDA 裡定義是 **4A**（DSPF 寫 `DSUSER 4A`、RPG I-spec 寫
+`I 1 4 DSUSER`），DD／GG／EE 所有程式都共用同一份定義，**RPG 層完全一致，不存在系列差異**。
+
+但**不可以照著 `4A` 在 Python 端寫 `[:4]`**，也不可以在 endpoint 的 Pydantic Field 上加
+`max_length=4`。理由：
+
+- 本專案實務上傳入的是 **6 碼員編**（見 `tdcc_data_importer/docs/IO_FORMAT.md` 範例 `"123456"`），
+  不是 RPG 時代的 4 碼代號
+- DB 端的 `*USER` 欄位已陸續由 4A 放寬到 `VARCHAR(7)`，`SQL_Script/init_BB_tables.sql`
+  的 `CHUSER` 有明確註解：`expanded from 4A for AD accounts`
+- 截斷會把 6 碼員編**靜默截半**後寫進 `xxUSER` / `LGUSER` 稽核欄位，
+  導致同一個人在不同模組留下的稽核記錄對不起來（這是實際發生過的 bug，GG03/Job08）
+
+正確寫法，比照 DD 全系列 `initial_input()` 的既有做法
+（`DD01/Job09`、`Job12`、`Job15`、`Job24`、`Job0501`、`Job0505` 等一律如此）：
+
+```python
+# ✅ 正確
+clean['DSUSER'] = str(user_choose.get('DSUSER') or '').strip()
+
+# ❌ 錯誤：DSPF 寫 4A 不代表 Python 要截斷
+clean['DSUSER'] = str(user_choose.get('DSUSER') or '').strip()[:4]
+```
+
+endpoint 層同樣不加長度限制（`arceus:api-writer` 也適用）：
+
+```python
+# ✅ 正確
+DSUSER: str = Field(..., description="使用者代號", example="110136")
+
+# ❌ 錯誤
+DSUSER: str = Field(..., max_length=4, description="使用者代號（4 碼）", example="KH01")
+```
+
+> **推廣原則**：DSPF/RPG 的欄位長度是**輸出畫面寬度與 LDA 位置**，不必然等於 Python 端
+> 該截斷的長度。`DSCOMP(3A)`、`DSSEQ(1A)` 這類本來就是固定碼的欄位截斷沒問題；
+> 但**代表「人」的識別欄位（使用者代號、員編、操作員）一律不截斷**，
+> 因為這些值的實際來源已經不是 AS/400 時代的 4 碼帳號了。
+> 拿不準時，先 grep DD 系列同名欄位的既有處理方式，照著做。
 
 ### 五、錯誤代碼與 `BusinessError`
 
