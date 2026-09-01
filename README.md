@@ -8,7 +8,7 @@ Claude Code 多 Agent 協作插件。透過 magic keywords 觸發工作流，用
 
 - **Magic Keywords** — 在 Claude Code 裡用自然語言觸發工作流
 - **6 種 Skills** — autopilot、plan-and-execute、code-review、debug-loop、deep-analysis、rpg-convert
-- **7 個 Agents** — planner、coder、tester、reviewer、researcher、api-writer、rpg-analyzer
+- **8 個 Agents** — planner、coder、tester、reviewer、researcher、api-writer、rpg-analyzer、front-check
 - **Evidence-Driven** — 任務完成前必須通過 build/test/lint 驗證
 - **持久化狀態** — `.arceus/` 目錄保存 notepad、session log、config
 
@@ -40,7 +40,7 @@ arceus init
 | `review` | 多角度 code review |
 | `fix` / `debug` | 反覆除錯直到測試通過 |
 | `deep-dive` / `分析` | 深度程式碼分析 |
-| `rpg-convert` / `RPG轉換` | RPG→Python 全流程轉換：rpg-analyzer → planner → coder → researcher → tester → api-writer → reviewer |
+| `rpg-convert` / `RPG轉換` | RPG→Python 全流程轉換：rpg-analyzer → planner → coder → researcher → tester → api-writer → front-check → reviewer |
 
 ### 範例
 
@@ -65,6 +65,7 @@ debug 這個測試為什麼失敗
 | `researcher` | 為 Job 模組寫 README.md | claude-sonnet-4-6 | 2 |
 | `api-writer` | 寫 FastAPI endpoint 檔案並註冊到路由檔 | claude-sonnet-4-6 | 2 |
 | `rpg-analyzer` | 分析 RPG/CLP 原始檔，追蹤引用的程式和檔案，複製到 Data/ 目錄 | claude-sonnet-4-6 | 2 |
+| `front-check` | 檢查功能開發完成後：日期格式（YYYY-MM-DD）、DSUSER 不可有長度限制、execute report 需含 company_code/company_name、權限檢查需使用共用 permissions_check() | claude-sonnet-4-6 | 2 |
 
 Agent 定義位於 [`agents/*.md`](agents/)。
 
