@@ -29,11 +29,20 @@ You are the **API Writer Agent** in the Arceus orchestration system. You create 
 - Don't add error handling beyond what the existing pattern already uses
 - Don't modify `endpoint_utils.py` or shared utilities
 - Register to `XX_ROUTE.py` in numeric prefix order
+- **Body 具名範例一律用 `openapi_examples=`，不可用 `examples=`：** 本專案 FastAPI 版本中 `Body()` 的 `examples` 參數是 pydantic JSON Schema 用的，型別是 `list`；傳入 dict（`examples={"case1": {...}}`）會被靜默忽略，`/docs` 完全不會顯示具名範例下拉選單，Swagger 會退回用 schema 自動生成範例——其規則是「無 default 的必填欄位用 `example`，有 default 的欄位一律顯示 `default`」，導致填了 `example=` 的選填欄位在畫面上仍顯示成 default 值（例如空白），造成「明明程式碼裡是對的測資，畫面上卻壞掉」的假象。正確參數是 `openapi_examples=`（型別 dict），見下方 Endpoint File Structure 範本。
 - **Example 測資必須是查過 DB、確認會執行成功的真實資料，不可用編造的佔位值（如 `024`）：**
   - 不論是欄位層級 `Field(example=...)` 還是 model 層級 `json_schema_extra.example`／`Body(examples={...})`，值都要來自實際連線 DB 查詢的結果（用 `setting.ini` 指定的連線資訊，或該 Job 的 DAL 查詢語句）
   - 查詢時要串接該筆資料實際會走到的驗證條件，不能只查主表：例如查詢類（唯讀）API，找一組主檔（如公司代號）存在、且明細確實有資料的 key；新增類 API，除了主檔存在，還要確認目標 key **尚未存在**（避免 example 一執行就撞重複鍵）；修改／刪除類 API，要確認目標記錄**已存在**，且不會被其他業務規則擋下（例如「不可修改過去年度」這類日期／狀態限制，需要先看過對應的驗證邏輯，挑一組不會被擋的期別）
   - 若同一組 key 沒辦法同時滿足所有條件（例如某個測試公司的資料全部太舊、修改一定會被過去年度規則擋住），不要硬塞同一個公司到底：換一組能真正成功的 key／公司，並在 example 的 `summary` 註明為什麼選這組（例如「公司 X 資料皆早於當年度，無法示範修改，故改用公司 Y」）
   - 每個 example 產生後，若有辦法（DB 可連線），實際跑一次對應的 library 函式驗證真的會回傳成功，而不是憑肉眼推測
+- **驗證「DB 資料正確」不等於驗證「Swagger 有顯示這組資料」，兩者都要做：** 上面兩條規則只驗證了 example 的「值」本身能不能成功執行；但 `/docs` 上實際顯示什麼，是另一個獨立的失敗點（例如本條規則要防的 `examples=`/`openapi_examples=` 打錯）。寫完 endpoint 後，用下列任一方式實際產生該 endpoint 的 OpenAPI schema，確認 `requestBody.content["application/json"].examples` 真的存在且內容正確，不能只憑肉眼看程式碼判斷：
+  ```python
+  # 最小可行驗證（不需啟動整個 app，避開專案其他模組的匯入問題）：
+  # 把該 router 的 Pydantic model + endpoint 複製進一個獨立的 FastAPI() 實例，
+  # 或若能直接 import 到 app，用 app.openapi()，
+  # 印出 spec["paths"]["<path>"]["post"]["requestBody"] 檢查有沒有 "examples" 這個 key
+  ```
+  若印出來的 `requestBody` 底下沒有 `examples`，代表具名範例沒有生效，Swagger 會退回 schema `default`（通常是 0／空字串），對需要非零值才能成功的 API（如新增類）會保證失敗——這正是本條規則要防的失效模式。
 
 ## Endpoint File Structure
 
@@ -101,7 +110,9 @@ class ExecuteReq(BaseAliasModel):
 async def execute(
     req: ExecuteReq = Body(
         ...,
-        examples={
+        # ⚠️ 一律用 openapi_examples（dict），不可用 examples（那是 pydantic 的
+        # list 型別參數，傳 dict 會被靜默忽略，/docs 不會顯示具名範例）
+        openapi_examples={
             "<case_name>": {
                 "summary": "<中文說明>",
                 "value": {
@@ -156,8 +167,8 @@ api_router.include_router(<PREFIX>_XX_XX_XX.router, prefix="/<NN>/<XX>/<XX>")  #
 - `op` 字串格式：`<PREFIX><XXXXXX>/execute`
 - `summary` 格式：`<PREFIX><XXXXXX>：<中文功能說明>`
 - `ExecuteReq` 欄位來自 DSPF 的 `B`（Both）型態欄位
-- `examples` 至少提供一個正常案例，有多種模式時提供多個
-- **`examples`／`json_schema_extra.example`／`Field(example=...)` 的內容必須是查過 DB 驗證過可成功執行的真實資料**，見上方 Rules
+- `openapi_examples`（不是 `examples`）至少提供一個正常案例，有多種模式時提供多個
+- **`openapi_examples`／`json_schema_extra.example`／`Field(example=...)` 的內容必須是查過 DB 驗證過可成功執行的真實資料**，見上方 Rules
 - `Job<XXXX>.print_basic` 是統一的呼叫入口
 
 ## Implementation Approach
