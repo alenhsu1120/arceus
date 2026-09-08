@@ -7,7 +7,7 @@ Claude Code 多 Agent 協作插件。透過 magic keywords 觸發工作流，用
 ## 功能
 
 - **Magic Keywords** — 在 Claude Code 裡用自然語言觸發工作流
-- **6 種 Skills** — autopilot、plan-and-execute、code-review、debug-loop、deep-analysis、rpg-convert
+- **7 種 Skills** — autopilot、plan-and-execute、code-review、debug-loop、deep-analysis、rpg-convert、bc-check
 - **8 個 Agents** — planner、coder、tester、reviewer、researcher、api-writer、rpg-analyzer、front-check
 - **Evidence-Driven** — 任務完成前必須通過 build/test/lint 驗證
 - **持久化狀態** — `.arceus/` 目錄保存 notepad、session log、config
@@ -41,6 +41,7 @@ arceus init
 | `fix` / `debug` | 反覆除錯直到測試通過 |
 | `deep-dive` / `分析` | 深度程式碼分析 |
 | `rpg-convert` / `RPG轉換` | RPG→Python 全流程轉換：rpg-analyzer → planner → coder → researcher → tester → api-writer → front-check → reviewer |
+| `bc-check` / `bc檢查` | 先移除 CHANGELOG.md，再跑 rpg-convert 除 coder 以外的階段：rpg-analyzer → planner → researcher → tester → api-writer → front-check → reviewer |
 
 ### 範例
 

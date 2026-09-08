@@ -18,6 +18,12 @@ interface KeywordDef {
 
 const KEYWORDS: KeywordDef[] = [
   {
+    patterns: /\b(bc[\s-]?check)\b|bc檢查|BC檢查/i,
+    skill: "bc-check",
+    description:
+      "移除 CHANGELOG.md 後執行 rpg-convert 除 coder 以外的階段：rpg-analyzer → planner → researcher → tester → api-writer → front-check → reviewer",
+  },
+  {
     patterns: /\b(autopilot|auto[\s-]?pilot|full[\s-]?auto)\b/i,
     skill: "autopilot",
     description: "Full auto: plan → implement → test → review → complete",
