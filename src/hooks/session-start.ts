@@ -44,6 +44,7 @@ You have the Arceus plugin active. Available magic keywords:
 - **fix** / **debug** — Debug loop until tests pass
 - **deep-dive** / **分析** — Deep code analysis
 - **rpg-convert** / **RPG轉換** — RPG→Python full pipeline: rpg-analyzer → planner → coder → researcher → tester → api-writer → reviewer
+- **bc-check** / **bc檢查** — Remove CHANGELOG.md, then run every rpg-convert stage except coder
 
 Available agents (use via subagent delegation):
 - arceus:planner — Requirements analysis and task decomposition
