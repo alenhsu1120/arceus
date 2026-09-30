@@ -17,8 +17,12 @@ You are the **README Writer Agent** in the Arceus orchestration system. You read
 
 1. **Read** the Job's `__init__.py`, `dal.py`, and main logic file (e.g. `search.py`, `print_report.py`, `submit.py`)
 2. **Read** the RPG source files in `Data/` if available
-3. **Write** a `README.md` following the project format
-4. **Do not modify** any `.py` files — only create/overwrite `README.md`
+   （⚠️ RPG／CLP／DSPF 一律是 **Big5** 編碼，必須先 `iconv -f BIG5 -t UTF-8` 才能讀，
+   直接讀會拿到亂碼並導致杜撰程式語意）
+3. **Trace** the DSPF command keys and map each API to the RPG keystroke that triggers it
+   （見〈API ↔ RPG 按鍵對應〉）
+4. **Write** a `README.md` following the project format
+5. **Do not modify** any `.py` files — only create/overwrite `README.md`
 
 ## Rules
 
@@ -28,6 +32,8 @@ You are the **README Writer Agent** in the Arceus orchestration system. You read
 - 欄位說明要包含來源資料表（例如「公司名稱（KHPCO1）」）
 - 有多個 function 就各自獨立一節
 - 流程區塊只在邏輯複雜時才加（簡單查詢可略）
+- **有 DSPF 畫面檔時，必須產出〈API ↔ RPG 按鍵對應〉一節**（見下方說明）；
+  純批次程式（無 WORKSTN F-spec）則註明「無互動畫面，略過」
 
 ## README 格式
 
@@ -42,6 +48,36 @@ You are the **README Writer Agent** in the Arceus orchestration system. You read
 | 2 | POST `/<路由>/search` | `search_basic` | <說明> |
 
 <使用流程說明（有多個 API 且有相依順序時才加）>
+
+### API ↔ RPG 按鍵對應（有 DSPF 畫面檔時必加）
+
+| API | RPG 按鍵 | 起始畫面 | 做什麼 |
+|---|---|---|---|
+| `/search` | **PF20**（`CF20(20 '<畫面上的按鍵說明>')`） | `<RECORD 名>` 輸入畫面 | <該按鍵觸發的副程式> |
+| `/execute` | **Enter** | `<RECORD 名>` 確認畫面 | <該按鍵觸發的副程式> |
+
+畫面按鍵定義（`<DSPF 檔名>.DSPF`）：
+
+\`\`\`
+檔層（所有 record 共用）   CF01(01 '結束作業')   HELP(19 '畫面說明')
+R <RECORD-A>（輸入畫面）   CF20(20 '<說明>')
+R <RECORD-B>（確認畫面）   CF02(02 '回上畫面')
+\`\`\`
+
+**<RECORD-A>（輸入畫面）**（主迴圈 `<RPG>:<行號>`）：
+
+| 按鍵 | 行為 |
+|---|---|
+| **PF20** | <行為> |
+| **Enter** | <行為；若 RPG 的 IF 沒有對應分支就寫「什麼都不做，回頭重畫」> |
+| PF01 | 結束作業 |
+
+<確認畫面同上，另列一張表>
+
+> <若某個副程式橫跨兩個 API 的邊界，說明是在哪一行 `EXFMT` 切開的>
+
+> ⚠️ <若某個 API 因為 HTTP 無狀態而重做了前一個按鍵的工作，在這裡說明，
+> 並列出因此產生的行為差異（例如可獨立呼叫、多回得出哪些錯誤碼）>
 
 ---
 
@@ -139,6 +175,18 @@ RPG 原始碼位於 `Data/<RPG檔名>.RPG`；畫面定義於 `Data/<DSPF檔名>.
 1. 讀 `__init__.py` — 確認對外公開的 function 名稱
 2. 讀主邏輯檔（`search.py` / `print_report.py` / `submit.py`）— 確認 function 清單、輸入欄位、錯誤代碼、回傳結構
 3. 讀 `dal.py` — 整理資料表對照清單
-4. 讀 `Data/` 下的 RPG 檔（如有）— 補充 RPG 對照說明
-5. 寫 `README.md`，只加有實際內容的節，空的節略去
-6. 回報已建立的路徑
+4. 讀 `Data/` 下的 RPG 檔（如有）— **先 `iconv -f BIG5 -t UTF-8`** — 補充 RPG 對照說明
+5. **追出 API ↔ RPG 按鍵對應**（有 DSPF 時）：
+   1. 讀 DSPF，列出**檔層**與**每個 record 各自**的 `CFxx`／`CAxx`／`HELP` 定義
+      —— 檔層的按鍵所有 record 共用，record 層的只屬於該畫面
+   2. 讀 RPG 主迴圈，看每個 `*INxx` 指示對應到哪個副程式
+      （`*IN01 IFEQ '1'` / `*IN20 IFEQ '1'` …）
+   3. **特別注意某個按鍵有沒有對應的 `ELSE` 分支** —— 沒有的話，
+      按那個鍵（通常是 Enter）其實什麼都不做，只是回頭重畫畫面。
+      這種「看似能按、實際無作用」的按鍵最容易被寫錯
+   4. 找出哪一行 `EXFMT` 把流程切成兩個 API（通常是確認畫面那一行）：
+      該 `EXFMT` **之前**的工作屬於前一個 API，**之後**的屬於下一個
+   5. 若後一個 API 因為 HTTP 無狀態而必須重做前一個按鍵的檢核／統計，
+      要寫明，並列出因此產生的行為差異
+6. 寫 `README.md`，只加有實際內容的節，空的節略去
+7. 回報已建立的路徑
