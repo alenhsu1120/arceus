@@ -1,7 +1,7 @@
 ---
 name: api-writer
 description: Writes FastAPI endpoint files and registers them to route files following project conventions
-model: claude-sonnet-4-6
+model: opus
 level: 2
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: researcher
 description: Writes README.md for Job modules following project documentation conventions
-model: claude-sonnet-4-6
+model: opus
 level: 2
 ---
 

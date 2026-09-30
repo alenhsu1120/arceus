@@ -59,14 +59,14 @@ debug 這個測試為什麼失敗
 
 | Agent | 說明 | Model | Level |
 |---|---|---|---|
-| `planner` | 需求分析、風險評估、任務拆解 | claude-opus-4-6 | 3 |
-| `coder` | 專注實作程式碼（RPG → Python FastAPI 轉換 SOP） | claude-sonnet-4-6 | 2 |
-| `tester` | 執行驗證指令並回報通過/失敗結果 | claude-sonnet-4-6 | 2 |
-| `reviewer` | 多角度程式碼審查（正確性、安全性、效能、風格） | claude-sonnet-4-6 | 2 |
-| `researcher` | 為 Job 模組寫 README.md | claude-sonnet-4-6 | 2 |
-| `api-writer` | 寫 FastAPI endpoint 檔案並註冊到路由檔 | claude-sonnet-4-6 | 2 |
-| `rpg-analyzer` | 分析 RPG/CLP 原始檔，追蹤引用的程式和檔案，複製到 Data/ 目錄 | claude-sonnet-4-6 | 2 |
-| `front-check` | 檢查功能開發完成後：日期格式（YYYY-MM-DD）、DSUSER 不可有長度限制、execute report 需含 company_code/company_name、權限檢查需使用共用 permissions_check() | claude-sonnet-4-6 | 2 |
+| `planner` | 需求分析、風險評估、任務拆解 | opus | 3 |
+| `coder` | 專注實作程式碼（RPG → Python FastAPI 轉換 SOP） | opus | 2 |
+| `tester` | 執行驗證指令並回報通過/失敗結果 | opus | 2 |
+| `reviewer` | 多角度程式碼審查（正確性、安全性、效能、風格） | opus | 2 |
+| `researcher` | 為 Job 模組寫 README.md | opus | 2 |
+| `api-writer` | 寫 FastAPI endpoint 檔案並註冊到路由檔 | opus | 2 |
+| `rpg-analyzer` | 分析 RPG/CLP 原始檔，追蹤引用的程式和檔案，複製到 Data/ 目錄 | opus | 2 |
+| `front-check` | 檢查功能開發完成後：日期格式（YYYY-MM-DD）、DSUSER 不可有長度限制、execute report 需含 company_code/company_name、權限檢查需使用共用 permissions_check() | opus | 2 |
 
 Agent 定義位於 [`agents/*.md`](agents/)。
 

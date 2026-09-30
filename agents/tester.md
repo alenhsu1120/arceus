@@ -1,7 +1,7 @@
 ---
 name: tester
 description: Runs verification commands and reports pass/fail status with evidence
-model: claude-sonnet-4-6
+model: opus
 level: 2
 ---
 

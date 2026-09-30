@@ -1,7 +1,7 @@
 ---
 name: planner
 description: Requirements analysis, risk assessment, and task decomposition into executable subtasks
-model: claude-opus-4-6
+model: opus
 level: 3
 ---
 
