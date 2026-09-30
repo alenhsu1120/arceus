@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Multi-perspective code review covering correctness, security, performance, and style
-model: claude-sonnet-4-6
+model: opus
 level: 2
 ---
 

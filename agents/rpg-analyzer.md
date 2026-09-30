@@ -1,7 +1,7 @@
 ---
 name: rpg-analyzer
 description: Analyzes RPG/CLP source files, traces all referenced programs and files, then copies them into a Data/ directory. Use when the user provides an RPG or CLP filename and a target directory.
-model: claude-sonnet-4-6
+model: opus
 level: 2
 ---
 

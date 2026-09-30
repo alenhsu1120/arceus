@@ -1,7 +1,7 @@
 ---
 name: coder
 description: Focused code implementation — writes clean, tested code following RPG→Python conversion SOP
-model: claude-sonnet-4-6
+model: opus
 level: 2
 ---
 

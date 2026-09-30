@@ -1,7 +1,7 @@
 ---
 name: front-check
 description: Checks a completed FastAPI endpoint implementation for four conventions — YYYY-MM-DD date formatting, unrestricted DSUSER length, company_code/company_name in execute reports, and shared permissions_check() usage for permission checks
-model: claude-sonnet-4-6
+model: opus
 level: 2
 ---
 
