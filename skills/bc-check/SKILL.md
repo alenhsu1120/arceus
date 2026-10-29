@@ -76,11 +76,13 @@ Step 2 找出的缺漏或與 RPG 不符之處，只**記錄**下來帶進最終�
 ## Step 7：front-check（delegate to arceus:front-check）
 
 - 只在 Step 6 完成後才進行。
-- 委派 `arceus:front-check`，檢查範圍限定為本次涉及的 endpoint 檔案（及其對應的 Job 實作），核對四項規範：
+- 委派 `arceus:front-check`，檢查範圍限定為本次涉及的 endpoint 檔案（及其對應的 Job 實作），核對四項規範，並回報第 5 項提醒：
   1. 所有日期輸入輸出是否為 `YYYY-MM-DD` 格式
   2. `DSUSER` 是否還殘留任何長度限制（`max_length`/`min_length` 等）
   3. `/execute` 的 report 結構是否含 `company_code`、`company_name` 兩個欄位
   4. 權限檢查是否透過共用 `utils.common_utils.permissions_check()`（經 `dal.py` 的 `search_khpaut()`），而非自行重寫 KHPAUT 查詢邏輯
+  5. （提醒項，不算 FAIL）`TMP*` 工作檔是否只是同一請求內的過渡、其實不需要建 DB 表
+- 第 5 項若標示「建議移除」：不進入修正迴圈，也不阻擋後續步驟；在本流程最後的總結中**明確告知使用者**哪些 TMP 表可以不建、理由為何，並詢問是否比照 GG24/Job03 移除
 - **失敗處理**：問題出在 endpoint 層 → 交回 `arceus:api-writer` 修正後重跑 front-check，最多 3 輪。問題出在業務邏輯／report 產生邏輯本身（需要 coder）→ **STOP**，回報未通過項目並詢問使用者是否授權 coder 修正。
 
 ## Step 8：reviewer（delegate to arceus:reviewer）

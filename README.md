@@ -66,7 +66,7 @@ debug 這個測試為什麼失敗
 | `researcher` | 為 Job 模組寫 README.md | opus | 2 |
 | `api-writer` | 寫 FastAPI endpoint 檔案並註冊到路由檔 | opus | 2 |
 | `rpg-analyzer` | 分析 RPG/CLP 原始檔，追蹤引用的程式和檔案，複製到 Data/ 目錄 | opus | 2 |
-| `front-check` | 檢查功能開發完成後：日期格式（YYYY-MM-DD）、DSUSER 不可有長度限制、execute report 需含 company_code/company_name、權限檢查需使用共用 permissions_check() | opus | 2 |
+| `front-check` | 檢查功能開發完成後：日期格式（YYYY-MM-DD）、DSUSER 不可有長度限制、execute report 需含 company_code/company_name、權限檢查需使用共用 permissions_check()；並提醒可不建表的 TMP 工作檔 | opus | 2 |
 
 Agent 定義位於 [`agents/*.md`](agents/)。
 
